@@ -1,12 +1,13 @@
 const express = require('express');
-const app = express();
-const router = express.Router();
 const User = require('../models/user');
 const bycript = require('bcrypt');
 const _ = require('underscore');
+const { tokenVerify, adminVerify } = require('../middlewares/authentication');
+const router = express.Router();
+const app = express();
 
-
-router.get('/user', async(req, res) => {
+//El segundo parametro es la aplicación del middleware personalizado para verificar token.
+router.get('/user', tokenVerify, async(req, res) => {
 
     /* PAGINADO:
     .skip() hace que se muestren los registros desde el indice que le paso por parametro opcional en la
@@ -46,7 +47,7 @@ router.get('/user', async(req, res) => {
 });
 
 
-router.post('/user', async(req, res) => {
+router.post('/user', [tokenVerify, adminVerify], async(req, res) => {
     const { name, email, password, img, role, status, google } = req.body;
     const user = new User({
         name,
@@ -75,7 +76,7 @@ router.post('/user', async(req, res) => {
 });
 
 
-router.put('/user/:id', async(req, res) => {
+router.put('/user/:id', [tokenVerify, adminVerify], async(req, res) => {
 
     let id = req.params.id;
     //El _.pick valida que los argumentos a actualizar sean los que se encuentran en el []
@@ -137,7 +138,7 @@ router.delete('/user/:id', async(req, res) => {
 
 
 /** Para que al enviar un delete cambie el estado de true a false (eliminación lógica - deshabilitar) */
-router.delete('/user/:id', async(req, res) => {
+router.delete('/user/:id', [tokenVerify, adminVerify], async(req, res) => {
 
     let id = req.params.id;
     let changeStatus = {
